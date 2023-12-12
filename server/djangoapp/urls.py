@@ -11,8 +11,11 @@ urlpatterns = [
     path(route='static-template/', view=views.static_template_view, name='static_template'),
 
     # path for about view
+    path(route='about/', view=views.about, name='about'),
 
     # path for contact us view
+    path(route='contact/', view=views.contact, name='contact'),
+
 
     # path for registration
 
