@@ -8,6 +8,7 @@ urlpatterns = [
     # route is a string contains a URL pattern
     # view refers to the view function
     # name the URL
+    path(route='static-template/', view=views.static_template_view, name='static_template'),
 
     # path for about view
 
