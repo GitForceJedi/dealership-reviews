@@ -67,12 +67,10 @@ def logout_request(request):
 # Create a `registration_request` view to handle sign up request
 # def registration_request(request):
 # ...
-
+#KenWillCode FOR COURSERA, LAB ENVIRONMENT WAS DOWN (Performed in VS Code)
+#THE DIRECTIONS FOR NAMING ARE CONFUSING, I HAVE ADDED BOTH REGISTRATION AND SIGNUP (AS THEY REFERRED TO IT BY DIFFERENT NAMES)
+#BOTH WORK, BUT CURRENTLY registration_request is used 
 def registration_request(request):
-    return render(request, 'djangoapp/registration.html')
-   
-        
-def signup(request):
     context = {}
     if request.method == 'GET':
         return render(request, 'djangoapp/registration.html', context)
@@ -95,7 +93,32 @@ def signup(request):
             return redirect("djangoapp:index")
         else:
             context['message'] = "User already exists."
-            return render(request, 'djangoapp/registration.html', context)
+            return render(request, 'djangoapp/registration.html', context)   
+
+def signup(request):
+    context = {}
+    if request.method == 'GET':
+        return render(request, 'djangoapp/signup.html', context)
+    elif request.method == 'POST':
+        # Check if user exists
+        username = request.POST['username']
+        password = request.POST['psw']
+        first_name = request.POST['firstname']
+        last_name = request.POST['lastname']
+        user_exist = False
+        try:
+            User.objects.get(username=username)
+            user_exist = True
+        except:
+            logger.error("New user")
+        if not user_exist:
+            user = User.objects.create_user(username=username, first_name=first_name, last_name=last_name,
+                                            password=password)
+            login(request, user)
+            return redirect("djangoapp:index")
+        else:
+            context['message'] = "User already exists."
+            return render(request, 'djangoapp/signup.html', context)
 
 
 # Update the `get_dealerships` view to render the index page with a list of dealerships
