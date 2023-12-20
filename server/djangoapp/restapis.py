@@ -72,6 +72,8 @@ def get_dealers_from_cf(url, **kwargs):
 
 # restapis.py
 
+# restapis.py
+
 def get_dealer_by_id(url, dealer_id):
     """
     Get a single dealer by dealer_id from a cloud function.

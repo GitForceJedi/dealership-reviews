@@ -3,7 +3,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 # from .models import related models
-from .restapis import get_request, get_dealers_from_cf
+from .restapis import get_request, get_dealers_from_cf, get_dealer_by_id, get_dealers_by_state
 # from .restapis import related methods
 from .models import CarMake, CarModel, CarDealer, CarReview
 from django.contrib.auth import login, logout, authenticate
@@ -139,6 +139,23 @@ def get_dealerships(request):
 # Create a `get_dealer_details` view to render the reviews of a dealer
 # def get_dealer_details(request, dealer_id):
 # ...
+# views.py
+
+def dealer_by_id_view(request, dealer_id):
+    # Replace 'your_cloud_function_url_here' with the actual URL of your cloud function
+    url = 'your_cloud_function_url_here'
+    
+    dealer = get_dealer_by_id(url, dealer_id)
+    
+    return render(request, 'dealer_detail.html', {'dealer': dealer})
+
+def dealers_by_state_view(request, state):
+    # Replace 'your_cloud_function_url_here' with the actual URL of your cloud function
+    url = 'your_cloud_function_url_here'
+    
+    dealers = get_dealers_by_state(url, state)
+    
+    return render(request, 'dealers_by_state.html', {'dealers': dealers})
 
 # Create a `add_review` view to submit a review
 # def add_review(request, dealer_id):

@@ -66,6 +66,21 @@ class CarDealer:
     def __str__(self):
         return "Dealer name: "
 
+class DealerReview(models.Model):
+    dealership = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
+    purchase = models.BooleanField(default=False)
+    review = models.TextField()
+    purchase_date = models.DateField()
+    car_make = models.CharField(max_length=255)
+    car_model = models.CharField(max_length=255)
+    car_year = models.IntegerField()
+    sentiment = models.CharField(max_length=20)  # Assuming sentiment is a string, you can adjust the max_length
+    review_id = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return f"Review by {self.name} for {self.dealership} - {self.review}"
+
 
 
 # <HINT> Create a plain Python class `DealerReview` to hold review data
@@ -80,6 +95,8 @@ class CarReview:
         self.car_make = car_make
         self.car_model = car_model
         self.car_year = car_year
+        sentiment = models.CharField(max_length=20)  # Assuming sentiment is a string, you can adjust the max_length
+
 
     def __str__(self):
         return f"Review by {self.name} - {self.review_text}"
