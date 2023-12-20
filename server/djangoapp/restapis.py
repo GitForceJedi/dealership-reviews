@@ -1,6 +1,7 @@
 import requests
 import json
 # import related models here
+from .models import CarMake, CarModel, CarDealer, CarReview
 from requests.auth import HTTPBasicAuth
 
 
@@ -30,5 +31,109 @@ from requests.auth import HTTPBasicAuth
 # - Call get_request() with specified arguments
 # - Get the returned sentiment label such as Positive or Negative
 
+def get_request(url, **kwargs):
+    print(kwargs)
+    print("GET from {} ".format(url))
+    try:
+        # Call get method of requests library with URL and parameters
+        response = requests.get(url, headers={'Content-Type': 'application/json'},
+                                    params=kwargs)
+    except:
+        # If any error occurs
+        print("Network exception occurred")
+    status_code = response.status_code
+    print("With status {} ".format(status_code))
+    json_data = json.loads(response.text)
+    return json_data
+
+def get_dealers_from_cf(url, **kwargs):
+    results = []
+    # Call get_request with a URL parameter
+    json_result = get_request(url)
+    if json_result and isinstance(json_result, list):
+        # Iterate over the list of dealers
+        for dealer in json_result:
+            # Assuming each dealer is a dictionary, modify accordingly if it's a different structure
+            dealer_obj = CarDealer(
+                address=dealer.get("address"),
+                city=dealer.get("city"),
+                full_name=dealer.get("full_name"),
+                id=dealer.get("id"),
+                lat=dealer.get("lat"),
+                long=dealer.get("long"),
+                short_name=dealer.get("short_name"),
+                st=dealer.get("st"),
+                zip=dealer.get("zip"),
+                state=dealer.get("state"),
+            )
+            results.append(dealer_obj)
+
+    return results
+
+# restapis.py
+
+def get_dealer_by_id(url, dealer_id):
+    """
+    Get a single dealer by dealer_id from a cloud function.
+
+    Args:
+    - url (str): The URL of the cloud function.
+    - dealer_id (str): The ID of the dealer.
+
+    Returns:
+    - CarDealer: A CarDealer object representing the dealer.
+    """
+    params = {'dealerId': dealer_id}
+    json_result = get_request(url, **params)
+
+    if json_result:
+        dealer_doc = json_result  # Assuming the response is a single dealer, modify if needed
+        dealer_obj = CarDealer(
+            id=dealer_doc["id"],
+            city=dealer_doc["city"],
+            state=dealer_doc["state"],
+            st=dealer_doc["st"],
+            address=dealer_doc["address"],
+            zip_code=dealer_doc["zip"],
+            lat=dealer_doc["lat"],
+            long=dealer_doc["long"],
+            short_name=dealer_doc["short_name"],
+            full_name=dealer_doc["full_name"]
+        )
+        return dealer_obj
+    else:
+        return None
 
 
+def get_dealers_by_state(url, state):
+    """
+    Get a list of dealers by state from a cloud function.
+
+    Args:
+    - url (str): The URL of the cloud function.
+    - state (str): The state to filter dealers.
+
+    Returns:
+    - list: A list of CarDealer objects representing dealers in the specified state.
+    """
+    params = {'state': state}
+    json_result = get_request(url, **params)
+
+    results = []
+    if json_result and isinstance(json_result, list):
+        for dealer_doc in json_result:
+            dealer_obj = CarDealer(
+                id=dealer_doc["id"],
+                city=dealer_doc["city"],
+                state=dealer_doc["state"],
+                st=dealer_doc["st"],
+                address=dealer_doc["address"],
+                zip_code=dealer_doc["zip"],
+                lat=dealer_doc["lat"],
+                long=dealer_doc["long"],
+                short_name=dealer_doc["short_name"],
+                full_name=dealer_doc["full_name"]
+            )
+            results.append(dealer_obj)
+
+    return results
