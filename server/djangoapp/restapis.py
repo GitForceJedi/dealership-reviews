@@ -70,9 +70,30 @@ def get_dealers_from_cf(url, **kwargs):
 
     return results
 
-# restapis.py
+def get_dealer_reviews_from_cf(url, dealer_id, **kwargs):
+    results = []
+    # Call get_request with a URL parameter and dealerId as a query parameter
+    json_result = get_request(url, dealerId=dealer_id)
+    
+    if json_result and isinstance(json_result, list):
+        # Iterate over the list of reviews
+        for review in json_result:
+            # Assuming each review is a dictionary, modify accordingly if it's a different structure
+            review_obj = DealerReview(
+                review_id=review.get("review_id"),
+                dealership=review.get("dealership"),
+                name=review.get("name"),
+                purchase=review.get("purchase"),
+                review=review.get("review"),
+                purchase_date=review.get("purchase_date"),
+                car_make=review.get("car_make"),
+                car_model=review.get("car_model"),
+                car_year=review.get("car_year"),
+                sentiment=review.get("sentiment"),
+            )
+            results.append(review_obj)
 
-# restapis.py
+    return results
 
 def get_dealer_by_id(url, dealer_id):
     """
