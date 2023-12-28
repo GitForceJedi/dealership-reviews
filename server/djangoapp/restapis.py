@@ -1,7 +1,7 @@
 import requests
 import json
 # import related models here
-from .models import CarMake, CarModel, CarDealer, CarReview
+from .models import CarMake, CarModel, CarDealer, CarReview, DealerReview
 from requests.auth import HTTPBasicAuth
 
 
@@ -70,30 +70,56 @@ def get_dealers_from_cf(url, **kwargs):
 
     return results
 
+
+# In restapis.py
+# In restapis.py
+# In restapis.py
+# In restapis.py
+# In restapis.py
 def get_dealer_reviews_from_cf(url, dealer_id, **kwargs):
     results = []
-    # Call get_request with a URL parameter and dealerId as a query parameter
-    json_result = get_request(url, dealerId=dealer_id)
+    # Ensure 'id' is included in kwargs
+    kwargs['id'] = dealer_id
     
-    if json_result and isinstance(json_result, list):
-        # Iterate over the list of reviews
+    # Call get_request with a URL parameter (dealerId)
+    json_result = get_request(url, **kwargs)
+    
+    print("JSON Result:", json_result)  # Add this line for debugging
+    
+    if isinstance(json_result, list):
+        # Ensure that the result is a list
         for review in json_result:
-            # Assuming each review is a dictionary, modify accordingly if it's a different structure
-            review_obj = DealerReview(
-                review_id=review.get("review_id"),
-                dealership=review.get("dealership"),
-                name=review.get("name"),
-                purchase=review.get("purchase"),
-                review=review.get("review"),
-                purchase_date=review.get("purchase_date"),
-                car_make=review.get("car_make"),
-                car_model=review.get("car_model"),
-                car_year=review.get("car_year"),
-                sentiment=review.get("sentiment"),
-            )
-            results.append(review_obj)
-
+            if isinstance(review, dict):
+                # Create a DealerReview object with values in the review dictionary
+                review_obj = DealerReview(
+                    dealership=review.get("dealership"),
+                    name=review.get("name"),
+                    purchase=review.get("purchase"),
+                    review=review.get("review"),
+                    purchase_date=review.get("purchase_date"),
+                    car_make=review.get("car_make"),
+                    car_model=review.get("car_model"),
+                    car_year=review.get("car_year"),
+                    sentiment=review.get("sentiment"),
+                    id=review.get("_id")  # Use '_id' instead of 'id'
+                )
+                results.append(review_obj)
+            else:
+                print("Invalid review structure:", review)  # Add this line for debugging
+    else:
+        print("Invalid JSON result:", json_result)  # Add this line for debugging
+    
+    print("Results:", results)  # Add this line for debugging
     return results
+
+
+
+
+
+
+
+
+
 
 def get_dealer_by_id(url, dealer_id):
     """

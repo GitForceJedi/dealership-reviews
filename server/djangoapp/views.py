@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 # from .models import related models
 from .restapis import get_request, get_dealers_from_cf, get_dealer_reviews_from_cf, get_dealer_by_id, get_dealers_by_state
 # from .restapis import related methods
-from .models import CarMake, CarModel, CarDealer, CarReview
+from .models import CarMake, CarModel, CarDealer, CarReview, DealerReview
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from datetime import datetime
@@ -127,7 +127,7 @@ def signup(request):
 def get_dealerships(request):
     if request.method == "GET":
         #Replace url with link to get-dealership on port 3000
-        url = "https://kenwillcode-3000.theiadockernext-1-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/dealerships/get"
+        url = "https://kenwillcode-3000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/dealerships/get"
         # Get dealers from the URL
         dealerships = get_dealers_from_cf(url)
         # Concat all dealer's short name
@@ -140,24 +140,25 @@ def get_dealerships(request):
 # def get_dealer_details(request, dealer_id):
 # ...
 # views.py
+# In views.py
+from django.http import JsonResponse
+
+# In views.py
+from django.http import HttpResponse
+
 def get_dealer_details(request, dealer_id):
-    # Assuming you have the URL for fetching dealer reviews
-    reviews_url = "https://api.example.com/reviews"  # Replace with your actual URL
+    if request.method == "GET":
+        # URL of your cloud function for reviews
+        url = "https://kenwillcode-5000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/api/get_reviews"
+        # Get dealer reviews from the URL using dealer_id
+        dealer_reviews = get_dealer_reviews_from_cf(url, dealer_id)
+        
+        # Format the reviews_data as a string
+        reviews_data = ''.join([str(review) for review in dealer_reviews])
+        
+        # Return HttpResponse with the reviews_data
+        return HttpResponse(reviews_data)
 
-    # Call the get_dealer_reviews_from_cf method to fetch reviews with dealer_id as a parameter
-    reviews = get_dealer_reviews_from_cf(reviews_url, dealer_id)
-
-    # Check if there are reviews
-    if reviews:
-        context = {
-            'dealer_id': dealer_id,
-            'reviews': reviews,
-        }
-
-        return render(request, 'dealer_details.html', context)  # Replace with your actual template name
-    else:
-        # Handle the case when there are no reviews for the specified dealer
-        return render(request, 'no_reviews.html')  # Replace with your actual template name
 def dealer_by_id_view(request, dealer_id):
     # Replace 'your_cloud_function_url_here' with the actual URL of your cloud function
     url = 'your_cloud_function_url_here'
