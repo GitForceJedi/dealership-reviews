@@ -82,7 +82,7 @@ class DealerReview:
         self.review_id = id
 
     def __str__(self):
-        return f"Review by {self.name} for Dealership: {self.dealership} Review: {self.review}"
+        return f"Review by {self.name} for Dealership: {self.dealership} Review: {self.review} Sentiment: {self.sentiment}"
 
 #class DealerReview(models.Model):
  #   dealership = models.CharField(max_length=255)

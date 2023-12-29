@@ -34,17 +34,83 @@ from requests.auth import HTTPBasicAuth
 def get_request(url, **kwargs):
     print(kwargs)
     print("GET from {} ".format(url))
+    
+    api_key = kwargs.get("api_key")
+    
     try:
-        # Call get method of requests library with URL and parameters
-        response = requests.get(url, headers={'Content-Type': 'application/json'},
+        # Check if api_key is provided
+        if api_key:
+            # Call get method of requests library with URL, parameters, and API key
+            print('THIS IS API KEY:'+api_key)
+            response = requests.get(url, headers={'Content-Type': 'application/json'},
+                                    params=kwargs, auth=HTTPBasicAuth('apikey', api_key))
+            print('THIS IS RESPONSE:' +str(response))
+            print('THIS IS URL: '+url)
+        else:
+            # Call get method of requests library with URL and parameters only
+            response = requests.get(url, headers={'Content-Type': 'application/json'},
                                     params=kwargs)
-    except:
+    except requests.exceptions.RequestException as e:
         # If any error occurs
-        print("Network exception occurred")
+        print("Network exception occurred: {}".format(e))
+        return None
+
     status_code = response.status_code
     print("With status {} ".format(status_code))
-    json_data = json.loads(response.text)
-    return json_data
+    
+    try:
+        json_data = response.json()
+        return json_data
+    except json.JSONDecodeError as e:
+        print("Error decoding JSON response: {}".format(e))
+        return None
+
+# https://api.us-east.natural-language-understanding.watson.cloud.ibm.com/instances/5a16e067-80db-4d73-bea5-7770ddfe6a3c
+# https://api.us-east.natural-language-understanding.watson.cloud.ibm.com/instances/807751ef-aa26-49da-807d-c3a87eb7f717
+# fKH5SZrRcNWHyfRw2AU7caiQJSqqr2XDKTZVL47V2QZw
+# dC6K9B-AAWLw2nSdsc66_kCzYEeu7CWsp1AB0dtS-_tX
+def analyze_review_sentiments(dealerreview, **kwargs):
+    # Define the URL for IBM Watson NLU sentiment analysis
+    url = "https://api.us-east.natural-language-understanding.watson.cloud.ibm.com/instances/807751ef-aa26-49da-807d-c3a87eb7f717/v1/analyze?version=2022-04-07"
+
+    # Set the parameters for the sentiment analysis
+    params = {
+        "text": dealerreview,
+        "version": kwargs.get("version", "2021-08-01"),
+        "features": kwargs.get("features", "sentiment"),
+        "return_analyzed_text": kwargs.get("return_analyzed_text", True)
+    }
+
+    # Hardcode the API key
+    api_key = "dC6K9B-AAWLw2nSdsc66_kCzYEeu7CWsp1AB0dtS-_tX"
+
+    try:
+        # Make a call to the updated get_request method
+        response_data = get_request(url, api_key=api_key, **params)
+
+        # Print the entire response
+        print("API Response:", response_data)
+
+        # Process the response_data and return sentiment result
+        if response_data:
+            # Extract sentiment information or perform further processing
+            sentiment = response_data.get("sentiment", {}).get("document", {}).get("label")
+            analyzed_text = response_data.get("analyzed_text")
+            
+            print("Sentiment: {}".format(sentiment))
+            print("Analyzed Text: {}".format(analyzed_text))
+
+            return sentiment, analyzed_text
+        else:
+            print("Failed to analyze sentiments. Response data is empty.")
+            return None
+    except requests.exceptions.HTTPError as errh:
+        print("HTTP Error:", errh)
+        print("Response Content:", errh.response.content)
+    except requests.exceptions.RequestException as err:
+        print("Error:", err)
+
+    return None
 
 def get_dealers_from_cf(url, **kwargs):
     results = []

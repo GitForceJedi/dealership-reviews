@@ -3,7 +3,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 # from .models import related models
-from .restapis import get_request, get_dealers_from_cf, get_dealer_reviews_from_cf, get_dealer_by_id, get_dealers_by_state
+from .restapis import get_request, get_dealers_from_cf, get_dealer_reviews_from_cf, get_dealer_by_id, get_dealers_by_state, analyze_review_sentiments
 # from .restapis import related methods
 from .models import CarMake, CarModel, CarDealer, CarReview, DealerReview
 from django.contrib.auth import login, logout, authenticate
@@ -127,7 +127,7 @@ def signup(request):
 def get_dealerships(request):
     if request.method == "GET":
         #Replace url with link to get-dealership on port 3000
-        url = "https://kenwillcode-3000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/dealerships/get"
+        url = "http://localhost:3000/dealerships/get"
         # Get dealers from the URL
         dealerships = get_dealers_from_cf(url)
         # Concat all dealer's short name
@@ -149,16 +149,44 @@ from django.http import HttpResponse
 def get_dealer_details(request, dealer_id):
     if request.method == "GET":
         # URL of your cloud function for reviews
-        url = "https://kenwillcode-5000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/api/get_reviews"
+        url = "http://localhost:5000/api/get_reviews"
+        
         # Get dealer reviews from the URL using dealer_id
         dealer_reviews = get_dealer_reviews_from_cf(url, dealer_id)
         
-        # Format the reviews_data as a string
-        reviews_data = ''.join([str(review) for review in dealer_reviews])
-        
-        # Return HttpResponse with the reviews_data
-        return HttpResponse(reviews_data)
+        # Analyze sentiment for each review and append to reviews_data
+        reviews_data = []
+        for dealer_review in dealer_reviews:
+            review_text = dealer_review.review  # Assuming 'review' is an attribute of the DealerReview model
+            
+            # Analyze sentiment for the review
+            sentiment_result = analyze_review_sentiments(
+                dealerreview=review_text,
+                version="2021-08-01",
+                features="sentiment",
+                return_analyzed_text=True
+            )
+            
+            if sentiment_result:
+                sentiment_label, analyzed_text = sentiment_result
+                reviews_data.append({
+                    "review_text": review_text,
+                    "sentiment_label": sentiment_label,
+                    "analyzed_text": analyzed_text
+                })
+                dealer_review.sentiment = sentiment_label
 
+        # Convert reviews_data to a string
+        # Combine sentiment results with original dealer_reviews
+        #combined_reviews_data = [f"{review['review_text']} - Sentiment: {review['sentiment_label']}\n" for review in reviews_data] + [str(review) for review in dealer_reviews]
+        # Join the combined reviews data
+        #reviews_data_str = ''.join(combined_reviews_data)
+
+        # Return HttpResponse with the reviews_data_str
+        #return HttpResponse(reviews_data_str)
+        return HttpResponse(str(review) for review in dealer_reviews)
+
+    
 def dealer_by_id_view(request, dealer_id):
     # Replace 'your_cloud_function_url_here' with the actual URL of your cloud function
     url = 'your_cloud_function_url_here'
