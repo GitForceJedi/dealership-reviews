@@ -12,7 +12,9 @@ from requests.auth import HTTPBasicAuth
 
 # Create a `post_request` to make HTTP POST requests
 # e.g., response = requests.post(url, params=kwargs, json=payload)
-
+def post_request(url, json_payload, **kwargs):
+    response = requests.post(url, params=kwargs, json=json_payload)
+    return response
 
 # Create a get_dealers_from_cf method to get dealers from a cloud function
 # def get_dealers_from_cf(url, **kwargs):
@@ -78,7 +80,8 @@ def analyze_review_sentiments(dealerreview, **kwargs):
         "text": dealerreview,
         "version": kwargs.get("version", "2021-08-01"),
         "features": kwargs.get("features", "sentiment"),
-        "return_analyzed_text": kwargs.get("return_analyzed_text", True)
+        "return_analyzed_text": kwargs.get("return_analyzed_text", True),
+        "language": 'en'
     }
 
     # Hardcode the API key

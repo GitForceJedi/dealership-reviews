@@ -3,7 +3,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 # from .models import related models
-from .restapis import get_request, get_dealers_from_cf, get_dealer_reviews_from_cf, get_dealer_by_id, get_dealers_by_state, analyze_review_sentiments
+from .restapis import get_request, get_dealers_from_cf, get_dealer_reviews_from_cf, get_dealer_by_id, get_dealers_by_state, analyze_review_sentiments, post_request
 # from .restapis import related methods
 from .models import CarMake, CarModel, CarDealer, CarReview, DealerReview
 from django.contrib.auth import login, logout, authenticate
@@ -11,6 +11,9 @@ from django.contrib import messages
 from datetime import datetime
 import logging
 import json
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -133,7 +136,11 @@ def get_dealerships(request):
         # Concat all dealer's short name
         dealer_names = ' '.join([dealer.short_name for dealer in dealerships])
         # Return a list of dealer short name
-        return HttpResponse(dealer_names)
+        context = {}
+        context['dealership_list'] = dealerships
+
+        return render(request, 'djangoapp/index.html', context)
+    
 
 
 # Create a `get_dealer_details` view to render the reviews of a dealer
@@ -158,7 +165,7 @@ def get_dealer_details(request, dealer_id):
         reviews_data = []
         for dealer_review in dealer_reviews:
             review_text = dealer_review.review  # Assuming 'review' is an attribute of the DealerReview model
-            
+            print(review_text)
             # Analyze sentiment for the review
             sentiment_result = analyze_review_sentiments(
                 dealerreview=review_text,
@@ -207,3 +214,42 @@ def dealers_by_state_view(request, state):
 # def add_review(request, dealer_id):
 # ...
 
+#@login_required
+@csrf_exempt
+def add_review(request, dealer_id):
+    if request.method == 'POST':
+        # Check if user is authenticated
+        # if not request.user.is_authenticated:
+        #    return HttpResponse("Authentication required to add a review.", status=401)
+
+        # Create review dictionary
+        review = {
+            "id": request.POST.get('id', ''),
+            "name": request.POST.get('name', ''),
+            "dealership": dealer_id,
+            "review": request.POST.get('review', ''),  
+            "purchase": request.POST.get('purchase', ''),  
+            "purchase_date": datetime.utcnow().isoformat(),
+            "car_make": request.POST.get('car_make', ''),
+            "car_model": request.POST.get('car_model', ''),
+            "car_year": request.POST.get('car_year', ''),
+            "time": datetime.utcnow().isoformat()
+            
+        }
+        print(review)
+        # Create json_payload
+        json_payload = review
+
+        # Define the URL for the review-post cloud function
+        url = "http://localhost:5000/api/post_review"  # Replace with your actual URL
+
+        # Make a POST request using requests library
+        response = post_request(url, json_payload=json_payload)
+
+        # Print the post response in the console or use it as needed
+        print(response.text)
+
+        # You can also append it to HttpResponse and render it on the browser
+        return HttpResponse(response.text, status=response.status_code)
+    else:
+        return HttpResponse("Method not allowed", status=405)
