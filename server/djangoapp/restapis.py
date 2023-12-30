@@ -190,37 +190,23 @@ def get_dealer_reviews_from_cf(url, dealer_id, **kwargs):
 
 
 
-def get_dealer_by_id(url, dealer_id):
-    """
-    Get a single dealer by dealer_id from a cloud function.
-
-    Args:
-    - url (str): The URL of the cloud function.
-    - dealer_id (str): The ID of the dealer.
-
-    Returns:
-    - CarDealer: A CarDealer object representing the dealer.
-    """
-    params = {'dealerId': dealer_id}
-    json_result = get_request(url, **params)
-
+def get_dealer_by_id_from_cf(url, id, **kwargs):
+    result = {}
+    # Call get_request with a URL parameter
+    json_result = get_request(url, id=id)
+    print("JSON RESULTSS"+str(json_result))
     if json_result:
-        dealer_doc = json_result  # Assuming the response is a single dealer, modify if needed
-        dealer_obj = CarDealer(
-            id=dealer_doc["id"],
-            city=dealer_doc["city"],
-            state=dealer_doc["state"],
-            st=dealer_doc["st"],
-            address=dealer_doc["address"],
-            zip_code=dealer_doc["zip"],
-            lat=dealer_doc["lat"],
-            long=dealer_doc["long"],
-            short_name=dealer_doc["short_name"],
-            full_name=dealer_doc["full_name"]
-        )
-        return dealer_obj
-    else:
-        return None
+        # Get the row list in JSON as dealers
+        dealers = json_result  
+        # For each dealer object
+        dealer = dealers[0]
+        # Create a CarDealer object with values in `doc` object
+        dealer_obj = CarDealer(address=dealer["address"], city=dealer["city"], full_name=dealer["full_name"],
+                                id=dealer["id"], lat=dealer["lat"], long=dealer["long"],
+                                short_name=dealer["short_name"],
+                                state=dealer["state"], st=dealer["st"], zip=dealer["zip"])
+        result = dealer_obj
+    return result
 
 
 def get_dealers_by_state(url, state):

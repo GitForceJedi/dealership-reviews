@@ -1,9 +1,9 @@
 from django.shortcuts import render
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 # from .models import related models
-from .restapis import get_request, get_dealers_from_cf, get_dealer_reviews_from_cf, get_dealer_by_id, get_dealers_by_state, analyze_review_sentiments, post_request
+from .restapis import get_request, get_dealers_from_cf, get_dealer_reviews_from_cf, get_dealer_by_id_from_cf, get_dealers_by_state, analyze_review_sentiments, post_request
 # from .restapis import related methods
 from .models import CarMake, CarModel, CarDealer, CarReview, DealerReview
 from django.contrib.auth import login, logout, authenticate
@@ -148,24 +148,17 @@ def get_dealerships(request):
 # ...
 # views.py
 # In views.py
-from django.http import JsonResponse
 
-# In views.py
-from django.http import HttpResponse
 
 def get_dealer_details(request, dealer_id):
     if request.method == "GET":
-        # URL of your cloud function for reviews
         url = "http://localhost:5000/api/get_reviews"
-        
-        # Get dealer reviews from the URL using dealer_id
         dealer_reviews = get_dealer_reviews_from_cf(url, dealer_id)
-        
+
         # Analyze sentiment for each review and append to reviews_data
         reviews_data = []
         for dealer_review in dealer_reviews:
-            review_text = dealer_review.review  # Assuming 'review' is an attribute of the DealerReview model
-            print(review_text)
+            review_text = dealer_review.review
             # Analyze sentiment for the review
             sentiment_result = analyze_review_sentiments(
                 dealerreview=review_text,
@@ -176,31 +169,36 @@ def get_dealer_details(request, dealer_id):
             
             if sentiment_result:
                 sentiment_label, analyzed_text = sentiment_result
-                reviews_data.append({
-                    "review_text": review_text,
-                    "sentiment_label": sentiment_label,
-                    "analyzed_text": analyzed_text
-                })
                 dealer_review.sentiment = sentiment_label
+                reviews_data.append(dealer_review)
 
-        # Convert reviews_data to a string
-        # Combine sentiment results with original dealer_reviews
-        #combined_reviews_data = [f"{review['review_text']} - Sentiment: {review['sentiment_label']}\n" for review in reviews_data] + [str(review) for review in dealer_reviews]
-        # Join the combined reviews data
-        #reviews_data_str = ''.join(combined_reviews_data)
+        # Create an empty context dictionary
+        context = {}
+        dealer_url = "http://localhost:3000/dealerships/get"
+        dealer = get_dealer_by_id_from_cf(dealer_url, id = dealer_id)
+        print("DEALERDEALER"+str(dealer))
+        context['dealer'] = dealer
+        # Add the dealer_reviews list to context
+        context['dealer_reviews'] = reviews_data
 
         # Return HttpResponse with the reviews_data_str
-        #return HttpResponse(reviews_data_str)
-        return HttpResponse(str(review) for review in dealer_reviews)
+        return render(request, 'djangoapp/dealer_details.html', context)
 
     
 def dealer_by_id_view(request, dealer_id):
-    # Replace 'your_cloud_function_url_here' with the actual URL of your cloud function
-    url = 'your_cloud_function_url_here'
-    
-    dealer = get_dealer_by_id(url, dealer_id)
-    
-    return render(request, 'dealer_detail.html', {'dealer': dealer})
+    # Replace 'your_cloud_function_url_here' with the actual URL of your cloud function    
+   if request.method == "GET":
+        #Replace url with link to get-dealership on port 3000
+        url = "http://localhost:3000/dealerships/get"
+        # Get dealers from the URL
+        dealerships = get_dealer_by_id_from_cf(url, dealer_id)
+        # Concat all dealer's short name
+        dealer_names = ' '.join(dealerships.short_name)
+        # Return a list of dealer short name
+        context = {}
+        context['dealership_list'] = dealerships
+
+        return HttpResponse(dealer_names)
 
 def dealers_by_state_view(request, state):
     # Replace 'your_cloud_function_url_here' with the actual URL of your cloud function
@@ -215,41 +213,51 @@ def dealers_by_state_view(request, state):
 # ...
 
 #@login_required
-@csrf_exempt
+@csrf_exempt   
 def add_review(request, dealer_id):
-    if request.method == 'POST':
-        # Check if user is authenticated
-        # if not request.user.is_authenticated:
-        #    return HttpResponse("Authentication required to add a review.", status=401)
-
-        # Create review dictionary
-        review = {
-            "id": request.POST.get('id', ''),
-            "name": request.POST.get('name', ''),
-            "dealership": dealer_id,
-            "review": request.POST.get('review', ''),  
-            "purchase": request.POST.get('purchase', ''),  
-            "purchase_date": datetime.utcnow().isoformat(),
-            "car_make": request.POST.get('car_make', ''),
-            "car_model": request.POST.get('car_model', ''),
-            "car_year": request.POST.get('car_year', ''),
-            "time": datetime.utcnow().isoformat()
-            
+    if request.method == "GET":
+        cars = CarModel.objects.filter(dealer_id=dealer_id)
+        context = {
+            "cars": cars,
+            "dealer_id": dealer_id,
         }
-        print(review)
-        # Create json_payload
-        json_payload = review
+        return render(request, "djangoapp/add_review.html", context)
+    
+    elif request.method == 'POST':
+        try:
+            # Update json_payload with actual values from the review form
+            json_payload = {
+                "id": request.POST.get('id', ''),
+                "name": request.POST.get('name', ''),
+                "dealership": dealer_id,
+                "review": request.POST.get('content', ''),
+                "purchase": request.POST.get('purchasecheck', False),
+                "purchase_date": request.POST.get('purchasedate', ''),  # Use the actual field name from the form
 
-        # Define the URL for the review-post cloud function
-        url = "http://localhost:5000/api/post_review"  # Replace with your actual URL
+                # Adjust these fields based on your form data
+                "car_make": '',
+                "car_model": '',
+                "car_year": '',
+                
+                "time": datetime.utcnow().isoformat(),
+            }
+            selected_car_id = request.POST.get('car', '')
+            selected_car = CarModel.objects.get(id=selected_car_id)
+            json_payload["car_make"] = selected_car.car_make.name
+            json_payload["car_model"] = selected_car.name
+            json_payload["car_year"] = selected_car.year.strftime("%Y")
+            # Your existing code to post the review
+            url = "http://localhost:5000/api/post_review"  # Replace with your actual URL
+            response = post_request(url, json_payload=json_payload)
+            
+            print("NEWRESPONSENEW")
+            print(response)
 
-        # Make a POST request using requests library
-        response = post_request(url, json_payload=json_payload)
+            # Redirect user to the dealer details page once the review post is done
+            return redirect('djangoapp:dealer_details', dealer_id=dealer_id)
 
-        # Print the post response in the console or use it as needed
-        print(response.text)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
 
-        # You can also append it to HttpResponse and render it on the browser
-        return HttpResponse(response.text, status=response.status_code)
     else:
         return HttpResponse("Method not allowed", status=405)

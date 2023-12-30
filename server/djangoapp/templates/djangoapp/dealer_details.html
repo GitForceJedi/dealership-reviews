@@ -1,15 +1,10 @@
+<!-- dealer_details.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Dealership Review</title>
-    {% load static %}
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 </head>
-
-    <body>
-
-    <!--Add a nav bar here -->
+<body>
     <nav class="navbar navbar-light bg-light">
         <div class="container-fluid">
             <div class="navbar-header">
@@ -37,8 +32,43 @@
             </ul>
         </div>
     </nav>
-    <!-- Add reviews as cards -->
-
-    </body>
-
-</html>
+{% block content %}
+    <!-- Add a dealer details section here -->
+    <div class="container mt-4">
+        {% if user.is_authenticated %}
+        {% if dealer %}
+        <a class="btn btn-primary" href="{% url 'djangoapp:add_review' dealer.id %}">Add Review</a>
+      {% else %}
+        <!-- Handle the case where dealer is not available -->
+        <p>Error: Dealer information not available.</p>
+      {% endif %}        {% endif %}
+        <div class="row">
+            {% for dealer_review in dealer_reviews %}
+                <div class="card col-md-4 mb-3">
+                    <div class="card-header bg-light border-light">
+                        {% if dealer_review.sentiment == 'positive' %}
+                            <img class="emoji-img" height="50" width="50" src="{{ MEDIA_URL }}/emoji/positive.png" alt="Positive Emoji">
+                        {% elif dealer_review.sentiment == 'neutral' %}
+                            <img class="emoji-img" height="50" width="50" src="{{ MEDIA_URL }}/emoji/neutral.png" alt="Neutral Emoji">
+                        {% elif dealer_review.sentiment == 'negative' %}
+                            <img class="emoji-img" height="50" width="50" src="{{ MEDIA_URL }}/emoji/negative.png" alt="Negative Emoji">
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <span class="text-muted"></span>
+                            {{ dealer_review.car_make }} {{ dealer_review.car_model }} ({{ dealer_review.car_year }})
+                        </h5>
+                        <p class="card-text">
+                            <span class="text-muted"></span>
+                            {{ dealer_review.review }}
+                        </p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <!-- Include Bootstrap CSS -->
+{% endblock %}
+</body>
+</html
