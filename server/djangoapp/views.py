@@ -12,6 +12,7 @@ from datetime import datetime
 import logging
 import json
 from django.contrib.auth.decorators import login_required
+import random
 
 
 # Get an instance of a logger
@@ -225,9 +226,10 @@ def add_review(request, dealer_id):
     elif request.method == 'POST':
         try:
             # Update json_payload with actual values from the review form
+            random_number = random.randint(1, 10000)
             json_payload = {
-                "id": request.POST.get('id', ''),
-                "name": request.POST.get('name', ''),
+                "id": random_number,
+                "name": request.user.get_full_name() if request.user.is_authenticated else '',
                 "dealership": dealer_id,
                 "review": request.POST.get('content', ''),
                 "purchase": request.POST.get('purchasecheck', False),
