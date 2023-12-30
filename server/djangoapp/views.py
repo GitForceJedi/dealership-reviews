@@ -12,7 +12,6 @@ from datetime import datetime
 import logging
 import json
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
 
 
 # Get an instance of a logger
@@ -213,7 +212,7 @@ def dealers_by_state_view(request, state):
 # ...
 
 #@login_required
-@csrf_exempt   
+#@csrf_exempt   
 def add_review(request, dealer_id):
     if request.method == "GET":
         cars = CarModel.objects.filter(dealer_id=dealer_id)
