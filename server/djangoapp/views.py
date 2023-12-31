@@ -3,7 +3,7 @@ from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 # from .models import related models
-from .restapis import get_request, get_dealers_from_cf, get_dealer_reviews_from_cf, get_dealer_by_id_from_cf, get_dealers_by_state, analyze_review_sentiments, post_request
+from .restapis import get_request, get_dealers_from_cf, get_dealer_reviews_from_cf, get_dealer_by_id_from_cf, get_dealer_by_state_from_cf, analyze_review_sentiments, post_request
 # from .restapis import related methods
 from .models import CarMake, CarModel, CarDealer, CarReview, DealerReview
 from django.contrib.auth import login, logout, authenticate
@@ -202,11 +202,18 @@ def dealer_by_id_view(request, dealer_id):
 
 def dealers_by_state_view(request, state):
     # Replace 'your_cloud_function_url_here' with the actual URL of your cloud function
-    url = 'your_cloud_function_url_here'
-    
-    dealers = get_dealers_by_state(url, state)
-    
-    return render(request, 'dealers_by_state.html', {'dealers': dealers})
+    if request.method == "GET":
+        #Replace url with link to get-dealership on port 3000
+        url = "http://localhost:3000/dealerships/get"
+        # Get dealers from the URL
+        dealerships = get_dealer_by_state_from_cf(url, state)
+        # Concat all dealer's short name
+        #dealer_names = ' '.join(dealerships.short_name)
+        # Return a list of dealer short name
+        context = {}
+        context['dealership_list'] = dealerships
+
+        return HttpResponse(dealerships)
 
 # Create a `add_review` view to submit a review
 # def add_review(request, dealer_id):

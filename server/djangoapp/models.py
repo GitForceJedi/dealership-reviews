@@ -64,7 +64,7 @@ class CarDealer:
         self.full_name = full_name
 
     def __str__(self):
-        return "Dealer name: "
+        return f"Dealer: {self.short_name} Address: {self.address}"
 
 # <HINT> Create a plain Python class `DealerReview` to hold review data
 # In models.py
