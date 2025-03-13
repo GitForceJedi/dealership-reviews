@@ -3,16 +3,25 @@ const app = express();
 const port = process.env.PORT || 3000;
 const Cloudant = require('@cloudant/cloudant');
 
+const CLOUDANT_API_KEY = process.env.CLOUDANT_API_KEY;
+const CLOUDANT_URL = process.env.CLOUDANT_URL;
+
+// Check for env vars
+if (!CLOUDANT_API_KEY || !CLOUDANT_URL) {
+  console.error('Error: Missing Cloudant environment variables!');
+  process.exit(1);
+}
+
 // Initialize Cloudant connection with IAM authentication
 async function dbCloudantConnect() {
   try {
     const cloudant = Cloudant({
       plugins: {
         iamauth: {
-          iamApiKey: 'tpyOjAssM8PMYtMsApuXwTZisva9itZuy6YPoYv6pohS',
+          iamApiKey: CLOUDANT_API_KEY,
         },
       }, // Replace with your IAM API key
-      url: 'https://dc52bf37-9445-4f2b-a8eb-9df32a9562f8-bluemix.cloudantnosqldb.appdomain.cloud', // Replace with your Cloudant URL
+      url: CLOUDANT_URL, // Replace with your Cloudant URL
     });
 
     const db = cloudant.use('dealerships');

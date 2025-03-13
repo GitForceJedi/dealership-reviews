@@ -16,9 +16,5 @@ COPY reviews.py .
 # Expose port 5000 for the Python service
 EXPOSE 5000
 
-ENV CLOUDANT_USERNAME = 'dc52bf37-9445-4f2b-a8eb-9df32a9562f8-bluemix'
-ENV CLOUDANT_API_KEY = 'tpyOjAssM8PMYtMsApuXwTZisva9itZuy6YPoYv6pohS'
-ENV CLOUDANT_URL = 'https://dc52bf37-9445-4f2b-a8eb-9df32a9562f8-bluemix.cloudantnosqldb.appdomain.cloud'
-
 # Run the reviews.py service
 CMD ["python", "reviews.py"]
