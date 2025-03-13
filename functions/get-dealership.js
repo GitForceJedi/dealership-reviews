@@ -8,9 +8,11 @@ async function dbCloudantConnect() {
   try {
     const cloudant = Cloudant({
       plugins: {
-        iamauth: { iamApiKey: 'XH9wIk6_xMM2iJv1Z2aWStb3S0kFNPgNo5avzxgXiuNX' },
+        iamauth: {
+          iamApiKey: 'tpyOjAssM8PMYtMsApuXwTZisva9itZuy6YPoYv6pohS',
+        },
       }, // Replace with your IAM API key
-      url: 'https://23538a65-61d8-4636-911b-12394f8eb132-bluemix.cloudantnosqldb.appdomain.cloud', // Replace with your Cloudant URL
+      url: 'https://dc52bf37-9445-4f2b-a8eb-9df32a9562f8-bluemix.cloudantnosqldb.appdomain.cloud', // Replace with your Cloudant URL
     });
 
     const db = cloudant.use('dealerships');

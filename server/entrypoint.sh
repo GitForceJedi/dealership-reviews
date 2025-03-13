@@ -14,4 +14,11 @@
     echo "Making migrations and migrating the database. "
     python manage.py makemigrations main --noinput
     python manage.py migrate --noinput
+
+    # Collect static files for production
+    echo "Collecting static files."
+    python manage.py collectstatic --noinput
+
+    # Start the application with Gunicorn
+    echo "Starting application."
     exec "$@"

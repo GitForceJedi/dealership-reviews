@@ -3,7 +3,8 @@ from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 # from .models import related models
-from .restapis import get_request, get_dealers_from_cf, get_dealer_reviews_from_cf, get_dealer_by_id_from_cf, get_dealer_by_state_from_cf, analyze_review_sentiments, post_request
+from .restapis import get_request, get_dealers_from_cf, get_dealer_reviews_from_cf, get_dealer_by_id_from_cf, \
+    get_dealer_by_state_from_cf, analyze_review_sentiments, post_request
 # from .restapis import related methods
 from .models import CarMake, CarModel, CarDealer, CarReview, DealerReview
 from django.contrib.auth import login, logout, authenticate
@@ -13,7 +14,6 @@ import logging
 import json
 from django.contrib.auth.decorators import login_required
 import random
-
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -33,15 +33,16 @@ def about(request):
 
 
 # Create a `contact` view to return a static contact page
-#def contact(request):
+# def contact(request):
 def contact(request):
     return render(request, 'djangoapp/contact.html')
+
 
 # Create a `login_request` view to handle sign in request
 # def login_request(request):
 # ...
 
-#KenWillCode FOR COURSERA, LAB ENVIRONMENT WAS DOWN (Performed in VS Code)
+# KenWillCode FOR COURSERA, LAB ENVIRONMENT WAS DOWN (Performed in VS Code)
 
 def login_request(request):
     context = {}
@@ -56,13 +57,14 @@ def login_request(request):
             context['message'] = "Invalid username or password."
             return render(request, 'djangoapp/login.html', context)
     else:
-            context['message'] = "Invalid username or password."
+        context['message'] = "Invalid username or password."
+
 
 # Create a `logout_request` view to handle sign out request
 # def logout_request(request):
 # ...
 
-#KenWillCode FOR COURSERA, LAB ENVIRONMENT WAS DOWN (Performed in VS Code)
+# KenWillCode FOR COURSERA, LAB ENVIRONMENT WAS DOWN (Performed in VS Code)
 
 def logout_request(request):
     logout(request)
@@ -72,9 +74,9 @@ def logout_request(request):
 # Create a `registration_request` view to handle sign up request
 # def registration_request(request):
 # ...
-#KenWillCode FOR COURSERA, LAB ENVIRONMENT WAS DOWN (Performed in VS Code)
-#THE DIRECTIONS FOR NAMING ARE CONFUSING, I HAVE ADDED BOTH REGISTRATION AND SIGNUP (AS THEY REFERRED TO IT BY DIFFERENT NAMES)
-#BOTH WORK, BUT CURRENTLY registration_request is used 
+# KenWillCode FOR COURSERA, LAB ENVIRONMENT WAS DOWN (Performed in VS Code)
+# THE DIRECTIONS FOR NAMING ARE CONFUSING, I HAVE ADDED BOTH REGISTRATION AND SIGNUP (AS THEY REFERRED TO IT BY DIFFERENT NAMES)
+# BOTH WORK, BUT CURRENTLY registration_request is used
 def registration_request(request):
     context = {}
     if request.method == 'GET':
@@ -98,7 +100,8 @@ def registration_request(request):
             return redirect("djangoapp:index")
         else:
             context['message'] = "User already exists."
-            return render(request, 'djangoapp/registration.html', context)   
+            return render(request, 'djangoapp/registration.html', context)
+
 
 def signup(request):
     context = {}
@@ -129,8 +132,8 @@ def signup(request):
 # Update the `get_dealerships` view to render the index page with a list of dealerships
 def get_dealerships(request):
     if request.method == "GET":
-        #Replace url with link to get-dealership on port 3000
-        url = "https://node-app-latest-wyo4.onrender.com/dealerships/get"
+        # Replace url with link to get-dealership on port 3000
+        url = "http://node:3000/dealerships/get"
         # Get dealers from the URL
         dealerships = get_dealers_from_cf(url)
         # Concat all dealer's short name
@@ -140,7 +143,6 @@ def get_dealerships(request):
         context['dealership_list'] = dealerships
 
         return render(request, 'djangoapp/index.html', context)
-    
 
 
 # Create a `get_dealer_details` view to render the reviews of a dealer
@@ -152,7 +154,7 @@ def get_dealerships(request):
 
 def get_dealer_details(request, dealer_id):
     if request.method == "GET":
-        url = "https://python-app-latest-j7m2.onrender.com/api/get_reviews"
+        url = "http://python-service:5000/api/get_reviews"
         dealer_reviews = get_dealer_reviews_from_cf(url, dealer_id)
 
         # Analyze sentiment for each review and append to reviews_data
@@ -166,7 +168,7 @@ def get_dealer_details(request, dealer_id):
                 features="sentiment",
                 return_analyzed_text=True
             )
-            
+
             if sentiment_result:
                 sentiment_label, analyzed_text = sentiment_result
                 dealer_review.sentiment = sentiment_label
@@ -174,9 +176,9 @@ def get_dealer_details(request, dealer_id):
 
         # Create an empty context dictionary
         context = {}
-        dealer_url = "https://node-app-latest-wyo4.onrender.com/dealerships/get"
-        dealer = get_dealer_by_id_from_cf(dealer_url, id = dealer_id)
-        print("DEALERDEALER"+str(dealer))
+        dealer_url = "http://node:3000/dealerships/get"
+        dealer = get_dealer_by_id_from_cf(dealer_url, id=dealer_id)
+        print("DEALERDEALER" + str(dealer))
         context['dealer'] = dealer
         # Add the dealer_reviews list to context
         context['dealer_reviews'] = reviews_data
@@ -184,12 +186,12 @@ def get_dealer_details(request, dealer_id):
         # Return HttpResponse with the reviews_data_str
         return render(request, 'djangoapp/dealer_details.html', context)
 
-    
+
 def dealer_by_id_view(request, dealer_id):
-    # Replace 'your_cloud_function_url_here' with the actual URL of your cloud function    
-   if request.method == "GET":
-        #Replace url with link to get-dealership on port 3000
-        url = "https://node-app-latest-wyo4.onrender.com/dealerships/get"
+    # Replace 'your_cloud_function_url_here' with the actual URL of your cloud function
+    if request.method == "GET":
+        # Replace url with link to get-dealership on port 3000
+        url = "http://node:3000/dealerships/get"
         # Get dealers from the URL
         dealerships = get_dealer_by_id_from_cf(url, dealer_id)
         # Concat all dealer's short name
@@ -200,27 +202,29 @@ def dealer_by_id_view(request, dealer_id):
 
         return HttpResponse(dealer_names)
 
+
 def dealers_by_state_view(request, state):
     # Replace 'your_cloud_function_url_here' with the actual URL of your cloud function
     if request.method == "GET":
-        #Replace url with link to get-dealership on port 3000
-        url = "https://node-app-latest-wyo4.onrender.com/dealerships/get"
+        # Replace url with link to get-dealership on port 3000
+        url = "http://node:3000/dealerships/get"
         # Get dealers from the URL
         dealerships = get_dealer_by_state_from_cf(url, state)
         # Concat all dealer's short name
-        #dealer_names = ' '.join(dealerships.short_name)
+        # dealer_names = ' '.join(dealerships.short_name)
         # Return a list of dealer short name
         context = {}
         context['dealership_list'] = dealerships
 
         return HttpResponse(dealerships)
 
+
 # Create a `add_review` view to submit a review
 # def add_review(request, dealer_id):
 # ...
 
-#@login_required
-#@csrf_exempt   
+# @login_required
+# @csrf_exempt
 def add_review(request, dealer_id):
     if request.method == "GET":
         cars = CarModel.objects.filter(dealer_id=dealer_id)
@@ -229,7 +233,7 @@ def add_review(request, dealer_id):
             "dealer_id": dealer_id,
         }
         return render(request, "djangoapp/add_review.html", context)
-    
+
     elif request.method == 'POST':
         try:
             # Update json_payload with actual values from the review form
@@ -246,7 +250,7 @@ def add_review(request, dealer_id):
                 "car_make": '',
                 "car_model": '',
                 "car_year": '',
-                
+
                 "time": datetime.utcnow().isoformat(),
             }
             selected_car_id = request.POST.get('car', '')
@@ -255,9 +259,9 @@ def add_review(request, dealer_id):
             json_payload["car_model"] = selected_car.name
             json_payload["car_year"] = selected_car.year.strftime("%Y")
             # Your existing code to post the review
-            url = "https://python-app-latest-j7m2.onrender.com/api/post_review"  # Replace with your actual URL
+            url = "http://python-service:5000/api/post_review"  # Replace with your actual URL
             response = post_request(url, json_payload=json_payload)
-            
+
             print("NEWRESPONSENEW")
             print(response)
 

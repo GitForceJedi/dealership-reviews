@@ -1,0 +1,24 @@
+# Use an official Node.js runtime as a parent image
+FROM node:16
+
+# Set the working directory
+WORKDIR /usr/src/app
+
+# Copy package.json and install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy the rest of your application
+COPY . .
+
+# Expose the port that your Node.js app will use
+EXPOSE 3000
+
+# Define environment variables, e.g., database URLs, keys (for production)
+ENV NODE_ENV=production
+ENV CLOUDANT_USERNAME = 'dc52bf37-9445-4f2b-a8eb-9df32a9562f8-bluemix'
+ENV CLOUDANT_API_KEY = 'tpyOjAssM8PMYtMsApuXwTZisva9itZuy6YPoYv6pohS'
+ENV CLOUDANT_URL = 'https://dc52bf37-9445-4f2b-a8eb-9df32a9562f8-bluemix.cloudantnosqldb.appdomain.cloud'
+
+# Start the Node.js service
+CMD ["node", "get-dealership.js"]

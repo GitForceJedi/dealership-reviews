@@ -1,0 +1,5 @@
+cloudant
+flask
+dj-database-url
+psycopg2-binary
+ibm_cloud_sdk_core

@@ -1,0 +1,24 @@
+# Dockerfile.python - For the Python application (reviews.py)
+
+# Use the official Python image
+FROM python:3.12-slim
+
+# Set the working directory inside the container
+WORKDIR /usr/src/reviews
+
+# Copy the requirements file and install Python dependencies
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the reviews.py file from the functions directory into the container
+COPY reviews.py .
+
+# Expose port 5000 for the Python service
+EXPOSE 5000
+
+ENV CLOUDANT_USERNAME = 'dc52bf37-9445-4f2b-a8eb-9df32a9562f8-bluemix'
+ENV CLOUDANT_API_KEY = 'tpyOjAssM8PMYtMsApuXwTZisva9itZuy6YPoYv6pohS'
+ENV CLOUDANT_URL = 'https://dc52bf37-9445-4f2b-a8eb-9df32a9562f8-bluemix.cloudantnosqldb.appdomain.cloud'
+
+# Run the reviews.py service
+CMD ["python", "reviews.py"]

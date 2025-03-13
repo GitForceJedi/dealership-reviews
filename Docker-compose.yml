@@ -1,0 +1,82 @@
+version: '3'
+services:
+  # Django Service
+  django:
+    build:
+      context: ./server
+    container_name: django-app
+    entrypoint: /bin/sh -c "python manage.py migrate --noinput && python manage.py seed_cars && exec gunicorn --bind 0.0.0.0:8000 djangobackend.wsgi:application"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./server:/app
+      - ./wait-for-it.sh:/app/wait-for-it.sh
+    environment:
+      - DATABASE_URL=postgresql://user:o4TVu2crEoSs6NmMG18M497GdCQuL3Cq@dpg-cv9k0bvnoe9s73c47rmg-a.virginia-postgres.render.com/mydb_7vly  # Render PostgreSQL connection
+      - DJANGO_SECRET_KEY=your_secret_key
+      - DEBUG=True
+    depends_on:
+      - node
+      - python-service
+      - db
+    networks:
+      - app-network
+
+  # Node.js Service
+  node:
+    build:
+      context: ./functions
+      dockerfile: Dockerfile.node
+    container_name: node-app
+    command: node get-dealership.js
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./functions:/usr/src/app
+    environment:
+      - NODE_ENV=production
+    networks:
+      - app-network
+
+  # Python Service (reviews.py)
+  python-service:
+    build:
+      context: ./functions
+      dockerfile: Dockerfile.python
+    container_name: python-app
+    command: python reviews.py
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./functions:/usr/src/reviews
+    networks:
+      - app-network
+
+  # PostgreSQL Service with External Access
+  db:
+    image: postgres:latest
+    container_name: postgres-db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+    command: [ "postgres", "-c", "listen_addresses=*" ]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d mydb"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  pgdata:

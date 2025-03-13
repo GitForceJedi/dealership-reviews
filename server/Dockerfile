@@ -1,25 +1,23 @@
-FROM python:3.12.0-slim-bookworm
+# Use the base image for Django
+FROM python:3.12-slim
 
-ENV PYTHONBUFFERED 1
-ENV PYTHONWRITEBYTECODE 1
+# Install netcat-openbsd and other necessary tools
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends netcat-openbsd && \
+    rm -rf /var/lib/apt/lists/*
 
-ENV APP=/app
+# Set the working directory
+WORKDIR /app
 
-# Change the workdir.
-WORKDIR $APP
+# Copy the requirements file and install dependencies
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install the requirements
-COPY requirements.txt $APP
+# Copy the Django app and the wait-for-it script into the container
+COPY . /app/
 
-RUN pip3 install -r requirements.txt
-
-# Copy the rest of the files
-COPY . $APP
-
+# Expose port 8000 for the Django app
 EXPOSE 8000
 
-RUN chmod +x /app/entrypoint.sh
-
-ENTRYPOINT ["/bin/bash","/app/entrypoint.sh"]
-
-CMD ["gunicorn", "--bind", ":8000", "--workers", "3", "djangobackend.wsgi"]
+# Set the entrypoint for Django, ensuring the database is ready
+CMD ["sh", "-c", "/app/wait-for-it.sh db:5432 -- python manage.py migrate --noinput && python manage.py seed_cars && gunicorn djangobackend.wsgi:application --bind 0.0.0.0:8000"]
